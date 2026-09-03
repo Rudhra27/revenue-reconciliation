@@ -29,4 +29,15 @@ public class DatasetService {
 		return datasets.findByIdAndUserId(id, userId)
 				.orElseThrow(() -> new DatasetNotFoundException(id));
 	}
+
+	// Re-loads the dataset (the ingest step clears the persistence context) before updating it.
+	@Transactional
+	public void markOrdersLoaded(UUID id, UUID userId) {
+		getOwned(id, userId).markOrdersLoaded();
+	}
+
+	@Transactional
+	public void markPaymentsLoaded(UUID id, UUID userId) {
+		getOwned(id, userId).markPaymentsLoaded();
+	}
 }

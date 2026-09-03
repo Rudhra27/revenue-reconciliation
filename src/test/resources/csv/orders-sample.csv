@@ -1,0 +1,9 @@
+order_id,order_date,customer_email,currency,gross_amount,discount,net_amount,status
+ORD-1001,2025-04-01 10:00:00,a@example.com,USD,100.00,0.0,100.00,completed
+ord-1002 ,2025-04-02 11:00:00,b@example.com,usd,50.00,5.0,45.00,completed
+ORD-1003,2025-04-03 12:00:00,,USD,20.00,,20.00,completed
+ORD-1004,2025-04-04 13:00:00,d@example.com,USD,30.00,0.0,30.00,completed
+ORD-1004,2025-04-04 13:00:00,d@example.com,USD,30.00,0.0,30.00,completed
+ORD-1005,not-a-date,e@example.com,USD,10.00,0.0,10.00,completed
+ORD-1006,2025-04-06 09:00:00,f@example.com,USD,oops,0.0,15.00,completed
+,2025-04-07 09:00:00,g@example.com,USD,15.00,0.0,15.00,completed

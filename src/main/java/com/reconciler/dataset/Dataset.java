@@ -51,6 +51,16 @@ public class Dataset {
 		}
 	}
 
+	public void markOrdersLoaded() {
+		if (status == DatasetStatus.CREATED) {
+			status = DatasetStatus.ORDERS_LOADED;
+		}
+	}
+
+	public void markPaymentsLoaded() {
+		status = DatasetStatus.PAYMENTS_LOADED;
+	}
+
 	public UUID getId() {
 		return id;
 	}

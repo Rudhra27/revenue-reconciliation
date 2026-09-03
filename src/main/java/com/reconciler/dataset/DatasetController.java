@@ -19,9 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class DatasetController {
 
 	private final DatasetService datasets;
+	private final OrderRowRepository orderRows;
+	private final PaymentRowRepository paymentRows;
 
-	public DatasetController(DatasetService datasets) {
+	public DatasetController(DatasetService datasets, OrderRowRepository orderRows, PaymentRowRepository paymentRows) {
 		this.datasets = datasets;
+		this.orderRows = orderRows;
+		this.paymentRows = paymentRows;
 	}
 
 	@GetMapping
@@ -44,7 +48,12 @@ public class DatasetController {
 
 	@GetMapping("/{id}")
 	public String detail(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id, Model model) {
-		model.addAttribute("dataset", DatasetView.of(datasets.getOwned(id, user.id())));
+		Dataset dataset = datasets.getOwned(id, user.id());
+		long orderCount = orderRows.countByDatasetId(id);
+		model.addAttribute("dataset", DatasetView.of(dataset));
+		model.addAttribute("orderCount", orderCount);
+		model.addAttribute("paymentCount", paymentRows.countByDatasetId(id));
+		model.addAttribute("ordersLoaded", orderCount > 0);
 		return "datasets/detail";
 	}
 

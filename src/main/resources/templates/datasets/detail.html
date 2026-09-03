@@ -14,7 +14,52 @@
 		<dd th:text="${dataset.created}">date</dd>
 	</dl>
 
-	<p class="muted">File upload and reconciliation arrive in the next commits.</p>
+	<div th:if="${uploadError}" class="box box-error" th:text="${uploadError}">error</div>
+
+	<div th:if="${uploadSummary}" class="box"
+		 th:classappend="${uploadSummary.clean()} ? 'box-ok' : 'box-warn'">
+		<p>
+			<strong th:text="${uploadSummary.fileKind()}">orders</strong>:
+			<span th:text="${uploadSummary.rowsStored()}">0</span> of
+			<span th:text="${uploadSummary.rowsRead()}">0</span> rows stored,
+			<span th:text="${uploadSummary.rowsFlagged()}">0</span> flagged
+			(<span th:text="${uploadSummary.duplicatesFlagged()}">0</span> duplicate),
+			<span th:text="${uploadSummary.rowsRejected()}">0</span> rejected.
+		</p>
+		<details th:if="${!uploadSummary.errors().isEmpty()}">
+			<summary>Rejected rows</summary>
+			<ul>
+				<li th:each="e : ${uploadSummary.errors()}">
+					Line <span th:text="${e.line()}">0</span>: <span th:text="${e.message()}">reason</span>
+				</li>
+			</ul>
+		</details>
+	</div>
+
+	<section class="upload">
+		<h2>Orders file</h2>
+		<p class="muted" th:if="${orderCount > 0}">
+			<span th:text="${orderCount}">0</span> rows loaded. Uploading again replaces them.
+		</p>
+		<form th:action="@{/datasets/{id}/orders(id=${dataset.id})}" method="post" enctype="multipart/form-data">
+			<input type="file" name="file" accept=".csv" required>
+			<button type="submit">Upload orders</button>
+		</form>
+	</section>
+
+	<section class="upload">
+		<h2>Payments file</h2>
+		<p class="muted" th:if="${!ordersLoaded}">Upload the orders file first.</p>
+		<p class="muted" th:if="${paymentCount > 0}">
+			<span th:text="${paymentCount}">0</span> rows loaded. Uploading again replaces them.
+		</p>
+		<form th:action="@{/datasets/{id}/payments(id=${dataset.id})}" method="post" enctype="multipart/form-data">
+			<input type="file" name="file" accept=".csv" th:disabled="${!ordersLoaded}" required>
+			<button type="submit" th:disabled="${!ordersLoaded}">Upload payments</button>
+		</form>
+	</section>
+
+	<p class="muted">Reconciliation arrives in the next commit.</p>
 </main>
 </body>
 </html>

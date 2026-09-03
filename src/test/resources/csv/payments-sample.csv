@@ -1,0 +1,7 @@
+transaction_ref,processed_at,order_reference,currency,amount,fee,net_settled,type,status
+TXN001,01/04/2025 10:00,ORD-1001,USD,100.00,3.00,97.00,charge,settled
+TXN002,02/04/2025 11:00, ord-1002 ,USD,45.00,1.50,43.50,charge,settled
+TXN003,,ORD-1003,USD,20.00,0.80,19.20,charge,settled
+TXN004,04/04/2025 12:00,ORD-1099,EUR,30.00,1.00,29.00,charge,pending
+TXN005,05/04/2025 13:00,ORD-1005,USD,bad,1.00,9.00,charge,settled
+TXN006,06/04/2025 14:00,ORD-1006,USD,15.00,1.00,20.00,charge,weird

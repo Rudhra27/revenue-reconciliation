@@ -156,6 +156,63 @@ th {
 	color: var(--muted);
 }
 
+h2 {
+	font-size: 15px;
+	margin: 0 0 8px;
+}
+
+.upload {
+	border: 1px solid var(--rule);
+	border-radius: 8px;
+	padding: 16px;
+	margin: 16px 0;
+	background: #fff;
+}
+
+.upload form {
+	grid-auto-flow: column;
+	justify-content: start;
+	align-items: center;
+}
+
+.box {
+	border: 1px solid var(--rule);
+	border-radius: 8px;
+	padding: 12px 16px;
+	margin: 16px 0;
+	background: #fff;
+}
+
+.box p {
+	margin: 0;
+}
+
+.box-ok {
+	border-color: #b6ddc8;
+	background: #f1faf5;
+}
+
+.box-warn {
+	border-color: #e7d7a8;
+	background: #fbf6e9;
+}
+
+.box-error {
+	border-color: #e6bdba;
+	background: #fbefee;
+	color: var(--danger);
+}
+
+.box details {
+	margin-top: 8px;
+}
+
+.box ul {
+	margin: 6px 0 0;
+	padding-left: 18px;
+	font-size: 13px;
+}
+
 .notice {
 	color: var(--ok);
 }
