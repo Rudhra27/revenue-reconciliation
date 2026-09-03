@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Datasets')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar}"></header>
+<main class="content">
+	<h1>Datasets</h1>
+
+	<form class="row-form" th:action="@{/datasets}" method="post" th:object="${form}">
+		<input type="text" th:field="*{name}" placeholder="New dataset name" required>
+		<button type="submit">Create</button>
+		<span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+	</form>
+
+	<p class="muted" th:if="${datasets.isEmpty()}">No datasets yet. Create one to start.</p>
+
+	<table th:unless="${datasets.isEmpty()}">
+		<thead>
+		<tr>
+			<th>Name</th>
+			<th>Status</th>
+			<th>Created</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="d : ${datasets}">
+			<td><a th:href="@{/datasets/{id}(id=${d.id})}" th:text="${d.name}">name</a></td>
+			<td th:text="${d.status}">CREATED</td>
+			<td th:text="${d.created}">date</td>
+		</tr>
+		</tbody>
+	</table>
+</main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Something went wrong')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar}"></header>
+<main class="content">
+	<h1 th:text="${status} ?: 'Error'">Error</h1>
+	<p class="muted" th:text="${error} ?: 'The page could not be displayed.'">Details</p>
+	<p><a th:href="@{/datasets}">Back to datasets</a></p>
+</main>
+</body>
+</html>

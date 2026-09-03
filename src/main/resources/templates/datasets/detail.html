@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Dataset')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar}"></header>
+<main class="content">
+	<p><a th:href="@{/datasets}">Back to all datasets</a></p>
+	<h1 th:text="${dataset.name}">Dataset name</h1>
+
+	<dl class="facts">
+		<dt>Status</dt>
+		<dd th:text="${dataset.status}">CREATED</dd>
+		<dt>Created</dt>
+		<dd th:text="${dataset.created}">date</dd>
+	</dl>
+
+	<p class="muted">File upload and reconciliation arrive in the next commits.</p>
+</main>
+</body>
+</html>
