@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/0001-enable-extensions.sql
+  - include:
+      file: db/changelog/changes/0002-create-app-user.sql
