@@ -3,6 +3,7 @@ package com.reconciler.ingest;
 import com.reconciler.user.AppUserPrincipal;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,9 +20,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class IngestController {
 
 	private final IngestService ingest;
+	private final SampleDataService sampleData;
+	private final SampleDataProperties sampleDataProperties;
 
-	public IngestController(IngestService ingest) {
+	public IngestController(IngestService ingest, SampleDataService sampleData,
+			SampleDataProperties sampleDataProperties) {
 		this.ingest = ingest;
+		this.sampleData = sampleData;
+		this.sampleDataProperties = sampleDataProperties;
 	}
 
 	@PostMapping("/orders")
@@ -38,7 +44,22 @@ public class IngestController {
 		return "redirect:/datasets/" + id;
 	}
 
-	// Turns the upload outcome into one of two flash attributes the detail page renders.
+	@PostMapping("/load-sample")
+	public String loadSample(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id,
+			RedirectAttributes flash) {
+		if (!sampleDataProperties.enabled()) {
+			flash.addFlashAttribute("uploadError", "Sample data is not available.");
+			return "redirect:/datasets/" + id;
+		}
+		try {
+			flash.addFlashAttribute("uploadSummaries", sampleData.load(id, user.id()));
+		} catch (InvalidCsvException e) {
+			flash.addFlashAttribute("uploadError", e.getMessage());
+		}
+		return "redirect:/datasets/" + id;
+	}
+
+	// Turns the upload outcome into flash attributes the detail page renders.
 	// A not-found dataset is left to propagate (404); everything else lands as a message.
 	private void upload(MultipartFile file, RedirectAttributes flash, Function<InputStream, UploadSummary> ingestFn) {
 		if (file == null || file.isEmpty()) {
@@ -46,7 +67,7 @@ public class IngestController {
 			return;
 		}
 		try (InputStream in = file.getInputStream()) {
-			flash.addFlashAttribute("uploadSummary", ingestFn.apply(in));
+			flash.addFlashAttribute("uploadSummaries", List.of(ingestFn.apply(in)));
 		} catch (InvalidCsvException | OrdersRequiredException e) {
 			flash.addFlashAttribute("uploadError", e.getMessage());
 		} catch (IOException e) {

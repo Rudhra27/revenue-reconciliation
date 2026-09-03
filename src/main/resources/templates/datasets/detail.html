@@ -16,20 +16,20 @@
 
 	<div th:if="${uploadError}" class="box box-error" th:text="${uploadError}">error</div>
 
-	<div th:if="${uploadSummary}" class="box"
-		 th:classappend="${uploadSummary.clean()} ? 'box-ok' : 'box-warn'">
+	<div th:each="s : ${uploadSummaries}" class="box"
+		 th:classappend="${s.clean()} ? 'box-ok' : 'box-warn'">
 		<p>
-			<strong th:text="${uploadSummary.fileKind()}">orders</strong>:
-			<span th:text="${uploadSummary.rowsStored()}">0</span> of
-			<span th:text="${uploadSummary.rowsRead()}">0</span> rows stored,
-			<span th:text="${uploadSummary.rowsFlagged()}">0</span> flagged
-			(<span th:text="${uploadSummary.duplicatesFlagged()}">0</span> duplicate),
-			<span th:text="${uploadSummary.rowsRejected()}">0</span> rejected.
+			<strong th:text="${s.fileKind()}">orders</strong>:
+			<span th:text="${s.rowsStored()}">0</span> of
+			<span th:text="${s.rowsRead()}">0</span> rows stored,
+			<span th:text="${s.rowsFlagged()}">0</span> flagged
+			(<span th:text="${s.duplicatesFlagged()}">0</span> duplicate),
+			<span th:text="${s.rowsRejected()}">0</span> rejected.
 		</p>
-		<details th:if="${!uploadSummary.errors().isEmpty()}">
+		<details th:if="${!s.errors().isEmpty()}">
 			<summary>Rejected rows</summary>
 			<ul>
-				<li th:each="e : ${uploadSummary.errors()}">
+				<li th:each="e : ${s.errors()}">
 					Line <span th:text="${e.line()}">0</span>: <span th:text="${e.message()}">reason</span>
 				</li>
 			</ul>
@@ -56,6 +56,14 @@
 		<form th:action="@{/datasets/{id}/payments(id=${dataset.id})}" method="post" enctype="multipart/form-data">
 			<input type="file" name="file" accept=".csv" th:disabled="${!ordersLoaded}" required>
 			<button type="submit" th:disabled="${!ordersLoaded}">Upload payments</button>
+		</form>
+	</section>
+
+	<section class="upload" th:if="${sampleDataEnabled}">
+		<h2>Or load the sample data</h2>
+		<p class="muted">Loads a bundled orders and payments file so you can try the dashboard straight away.</p>
+		<form th:action="@{/datasets/{id}/load-sample(id=${dataset.id})}" method="post">
+			<button type="submit">Load sample data</button>
 		</form>
 	</section>
 

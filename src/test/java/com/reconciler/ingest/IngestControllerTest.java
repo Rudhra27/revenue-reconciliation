@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.reconciler.TestcontainersConfiguration;
 import com.reconciler.dataset.DatasetService;
 import com.reconciler.dataset.OrderRowRepository;
+import com.reconciler.dataset.PaymentRowRepository;
 import com.reconciler.user.AppUser;
 import com.reconciler.user.AppUserPrincipal;
 import com.reconciler.user.UserService;
@@ -41,6 +43,24 @@ class IngestControllerTest {
 
 	@Autowired
 	private OrderRowRepository orderRows;
+
+	@Autowired
+	private PaymentRowRepository paymentRows;
+
+	@Test
+	void loadSamplePopulatesBothFilesAndRedirects() throws Exception {
+		AppUser owner = users.register("owner@example.com", "password123");
+		UUID datasetId = datasets.create(owner.getId(), "Demo").getId();
+
+		mvc.perform(post("/datasets/{id}/load-sample", datasetId)
+						.with(user(principal(owner)))
+						.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/datasets/" + datasetId));
+
+		assertThat(orderRows.countByDatasetId(datasetId)).isEqualTo(185);
+		assertThat(paymentRows.countByDatasetId(datasetId)).isEqualTo(187);
+	}
 
 	@Test
 	void uploadsTheOrdersFileAndRedirectsToTheDataset() throws Exception {

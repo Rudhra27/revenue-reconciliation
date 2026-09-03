@@ -39,7 +39,7 @@ out/
 ### Local env / working files ###
 .env
 *.local
-reconciliation-design.pdf
-takehome-assignment-brief.md
-orders.csv
-payments.csv
+/reconciliation-design.pdf
+/takehome-assignment-brief.md
+/orders.csv
+/payments.csv

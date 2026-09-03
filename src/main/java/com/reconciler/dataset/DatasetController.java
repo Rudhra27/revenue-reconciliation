@@ -1,5 +1,6 @@
 package com.reconciler.dataset;
 
+import com.reconciler.ingest.SampleDataProperties;
 import com.reconciler.user.AppUserPrincipal;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -21,11 +22,14 @@ public class DatasetController {
 	private final DatasetService datasets;
 	private final OrderRowRepository orderRows;
 	private final PaymentRowRepository paymentRows;
+	private final SampleDataProperties sampleData;
 
-	public DatasetController(DatasetService datasets, OrderRowRepository orderRows, PaymentRowRepository paymentRows) {
+	public DatasetController(DatasetService datasets, OrderRowRepository orderRows, PaymentRowRepository paymentRows,
+			SampleDataProperties sampleData) {
 		this.datasets = datasets;
 		this.orderRows = orderRows;
 		this.paymentRows = paymentRows;
+		this.sampleData = sampleData;
 	}
 
 	@GetMapping
@@ -54,6 +58,7 @@ public class DatasetController {
 		model.addAttribute("orderCount", orderCount);
 		model.addAttribute("paymentCount", paymentRows.countByDatasetId(id));
 		model.addAttribute("ordersLoaded", orderCount > 0);
+		model.addAttribute("sampleDataEnabled", sampleData.enabled());
 		return "datasets/detail";
 	}
 
