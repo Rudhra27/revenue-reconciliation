@@ -38,4 +38,13 @@ class DatabaseUrlTest {
 		assertThat(DatabaseUrl.toJdbcProperties(null)).isEmpty();
 		assertThat(DatabaseUrl.toJdbcProperties("jdbc:postgresql://host:5432/db")).isEmpty();
 	}
+
+	@Test
+	void toleratesQuotesAndLeadingJunkAroundTheUrl() {
+		// a BOM, surrounding quotes, and a psql-style wrapper are all things a pasted value can carry
+		var props = DatabaseUrl.toJdbcProperties("﻿ psql 'postgresql://u:p@host/db?sslmode=require'");
+
+		assertThat(props).containsEntry("spring.datasource.url",
+				"jdbc:postgresql://host:5432/db?sslmode=require");
+	}
 }

@@ -33,12 +33,25 @@ public final class DatabaseUrl {
 		if (databaseUrl == null) {
 			return Map.of();
 		}
-		String trimmed = databaseUrl.trim();
-		if (!(trimmed.startsWith("postgres://") || trimmed.startsWith("postgresql://"))) {
+		// Anchor on the scheme wherever it actually starts: a pasted value can carry a stray BOM or
+		// non-breaking space that trim() leaves behind, surrounding quotes, or a `psql '...'` wrapper.
+		String cleaned = databaseUrl.strip();
+		if (cleaned.startsWith("jdbc:")) {
 			return Map.of();
 		}
+		int scheme = cleaned.indexOf("postgresql://");
+		if (scheme < 0) {
+			scheme = cleaned.indexOf("postgres://");
+		}
+		if (scheme < 0) {
+			return Map.of();
+		}
+		cleaned = cleaned.substring(scheme);
+		while (cleaned.endsWith("\"") || cleaned.endsWith("'")) {
+			cleaned = cleaned.substring(0, cleaned.length() - 1);
+		}
 
-		URI uri = URI.create(trimmed);
+		URI uri = URI.create(cleaned);
 		int port = uri.getPort() == -1 ? 5432 : uri.getPort();
 		StringBuilder jdbcUrl = new StringBuilder("jdbc:postgresql://")
 				.append(uri.getHost()).append(':').append(port).append(uri.getPath());
