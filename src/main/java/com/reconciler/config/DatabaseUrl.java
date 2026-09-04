@@ -19,7 +19,14 @@ public final class DatabaseUrl {
 
 	/** Read DATABASE_URL from the environment and, if it's a postgres URL, set the spring.datasource.* system properties. */
 	public static void applyToSystemProperties() {
-		toJdbcProperties(System.getenv("DATABASE_URL")).forEach(System::setProperty);
+		String databaseUrl = System.getenv("DATABASE_URL");
+		Map<String, String> properties = toJdbcProperties(databaseUrl);
+		properties.forEach(System::setProperty);
+		// Deploy-time breadcrumb: without this it's impossible to tell from a crash log whether the
+		// platform handed us DATABASE_URL at all, or whether the translation produced a JDBC URL.
+		System.out.printf("[DatabaseUrl] DATABASE_URL %s -> datasource url %s%n",
+				databaseUrl == null ? "absent" : "present (" + databaseUrl.length() + " chars)",
+				properties.getOrDefault("spring.datasource.url", "<unchanged>"));
 	}
 
 	static Map<String, String> toJdbcProperties(String databaseUrl) {
