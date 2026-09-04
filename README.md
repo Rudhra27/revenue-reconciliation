@@ -35,8 +35,8 @@ Health check: <http://localhost:8080/actuator/health>
 ### LLM explanations (optional)
 
 Set `LLM_API_KEY` to enable the **Explain** buttons. Any OpenAI-compatible endpoint works —
-OpenAI, or a free Llama host like Groq (`LLM_BASE_URL=https://api.groq.com/openai/v1`,
-`LLM_MODEL=llama-3.3-70b-versatile`). Without a key the app works exactly the same — the
+OpenAI, or a free model on Groq (`LLM_BASE_URL=https://api.groq.com/openai/v1`,
+`LLM_MODEL=openai/gpt-oss-20b`, `LLM_REASONING_EFFORT=low`). Without a key the app works exactly the same — the
 buttons just report that the explanation service isn't configured. See `.env.example`.
 
 ### Tests
@@ -79,7 +79,7 @@ HTML pages + HTML fragments
 | Migrations | Liquibase | Schema is rebuilt from the changelog on every boot. |
 | Auth | Spring Security, form login, **server-side session**, BCrypt | Simplest correct option for a server-rendered app: no token lifecycle to get wrong, CSRF stays on. |
 | Frontend | Thymeleaf + htmx + Chart.js | Keeps it a genuine monolith with one build. htmx gives async fragment swaps — exactly what the "LLM call in flight / failed" states need. htmx and Chart.js are vendored under `static/js/`, so the page has no external dependencies. |
-| LLM | OpenAI or any compatible endpoint (Groq free Llama, …), backend only | See [LLM approach](#llm-approach). |
+| LLM | OpenAI or any compatible endpoint (Groq, OpenRouter, Ollama, …), backend only | See [LLM approach](#llm-approach). |
 
 ### How data is scoped to a user
 
@@ -318,14 +318,13 @@ from `LlmService`, on the backend. It never influences whether two records match
 dashboard is fully usable whether or not any explanation call succeeds.
 
 **Provider.** The client speaks the OpenAI Chat Completions wire format, so it works with
-OpenAI or any compatible host — a free Llama on Groq / OpenRouter / Together, or a local
-Ollama. `LLM_BASE_URL`, `LLM_MODEL` and `LLM_RESPONSE_FORMAT` are configuration.
+OpenAI or any compatible host — a free model on Groq / OpenRouter / Together, or a local Ollama. `LLM_BASE_URL`, `LLM_MODEL` and `LLM_RESPONSE_FORMAT` are configuration.
 
 **What it's given.** A small hand-built JSON object: the discrepancy type, the computed
 numbers (`settledCharges`, `settledRefunds`, `effectivePaid`, the difference), amounts and
 currency. Only derived facts — no customer details.
 
-**Model and parameters.** `gpt-4o-mini` by default (or e.g. `llama-3.3-70b-versatile` on Groq). **Temperature 0.2** — low enough that the same
+**Model and parameters.** `gpt-4o-mini` by default (or e.g. `openai/gpt-oss-20b` free on Groq). **Temperature 0.2** — low enough that the same
 discrepancy yields a stable explanation on a repeat (results are cached, and a reviewer may
 re-open the same row), but not 0, because the output is prose rather than arithmetic and a
 little variation reads more naturally. `max_completion_tokens` is capped; the client has a

@@ -32,9 +32,10 @@ app:
     base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
     model: ${LLM_MODEL:gpt-4o-mini}
     temperature: ${LLM_TEMPERATURE:0.2}
-    max-tokens: ${LLM_MAX_TOKENS:500}
+    max-tokens: ${LLM_MAX_TOKENS:1000}
     timeout-seconds: ${LLM_TIMEOUT_SECONDS:20}
     response-format: ${LLM_RESPONSE_FORMAT:json_object}
+    reasoning-effort: ${LLM_REASONING_EFFORT:}
 
 server:
   port: ${PORT:8080}

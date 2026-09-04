@@ -11,8 +11,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * repeat (we cache, and a reviewer may re-open the same row), but not 0, since the output is
  * prose and a little variation reads more naturally.
  *
- * @param responseFormat {@code json_schema} (strict, OpenAI only), {@code json_object}
- *                       (forces valid JSON, widely supported), or {@code none}
+ * @param responseFormat  {@code json_schema} (strict, OpenAI only), {@code json_object}
+ *                        (forces valid JSON, widely supported), or {@code none}
+ * @param reasoningEffort {@code low} / {@code medium} / {@code high} for reasoning models
+ *                        (o-series, gpt-oss). Blank = don't send it, which is right for
+ *                        models like gpt-4o-mini that reject the parameter.
  */
 @ConfigurationProperties(prefix = "app.llm")
 public record LlmProperties(
@@ -23,7 +26,8 @@ public record LlmProperties(
 		double temperature,
 		int maxTokens,
 		int timeoutSeconds,
-		String responseFormat) {
+		String responseFormat,
+		String reasoningEffort) {
 
 	public boolean configured() {
 		return enabled && apiKey != null && !apiKey.isBlank();

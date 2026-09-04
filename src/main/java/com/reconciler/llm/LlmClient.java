@@ -85,6 +85,11 @@ class LlmClient {
 		body.put("model", properties.model());
 		body.put("temperature", properties.temperature());
 		body.put("max_tokens", properties.maxTokens());
+		if (hasText(properties.reasoningEffort())) {
+			// Keeps reasoning models (gpt-oss on Groq) from spending the whole budget thinking
+			// and never finishing the JSON.
+			body.put("reasoning_effort", properties.reasoningEffort().trim());
+		}
 		responseFormat().ifPresent(format -> body.put("response_format", format));
 		body.put("messages", messages.stream()
 				.map(m -> Map.of("role", m.role(), "content", m.content()))
@@ -128,10 +133,19 @@ class LlmClient {
 					throw new LlmCallException("The model provider is returning errors right now.");
 				}
 			}
-			throw new LlmCallException("The model provider rejected the request (" + http.getStatusCode() + ").");
+			throw new LlmCallException("The model provider rejected the request (" + http.getStatusCode() + "): "
+					+ shorten(http.getResponseBodyAsString()));
 		} catch (RestClientException other) {
 			throw new LlmCallException("The model call failed: " + other.getMessage());
 		}
+	}
+
+	private static String shorten(String body) {
+		if (body == null || body.isBlank()) {
+			return "no details";
+		}
+		String flat = body.replaceAll("\\s+", " ").trim();
+		return flat.length() > 300 ? flat.substring(0, 300) + "…" : flat;
 	}
 
 	private static boolean hasText(String value) {
