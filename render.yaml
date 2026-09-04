@@ -15,8 +15,15 @@ services:
         sync: false
       - key: APP_SAMPLE_DATA_ENABLED
         value: "true"
-      # Enables the Explain buttons. Any OpenAI-compatible endpoint works — set
-      # LLM_BASE_URL / LLM_MODEL (and LLM_REASONING_EFFORT for a reasoning model)
-      # if it isn't OpenAI, e.g. Groq's free gpt-oss. The app works without a key.
+
+      # Explanations, via Groq's free OpenAI-compatible endpoint. Only the key is a
+      # secret; paste it in the dashboard. Leave it unset and the app still runs —
+      # the Explain buttons just say the service isn't configured.
       - key: LLM_API_KEY
         sync: false
+      - key: LLM_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: LLM_MODEL
+        value: openai/gpt-oss-20b
+      - key: LLM_REASONING_EFFORT
+        value: low
