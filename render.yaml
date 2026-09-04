@@ -1,11 +1,6 @@
-# Render blueprint: a Docker web service plus a free managed Postgres.
+# Render blueprint: a Docker web service. Bring your own PostgreSQL (a free Neon
+# project works well and doesn't expire) and set DATABASE_URL in the dashboard.
 # Deploy with "New > Blueprint" and point it at this repo.
-databases:
-  - name: reconciler-db
-    plan: free
-    databaseName: reconciler
-    postgresMajorVersion: "16"
-
 services:
   - type: web
     name: reconciler
@@ -14,13 +9,12 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
     envVars:
-      # Render hands over a postgres:// URL; the app converts it to a JDBC URL on start.
+      # A postgres:// connection string (e.g. from Neon). The app converts it to a
+      # JDBC URL on start.
       - key: DATABASE_URL
-        fromDatabase:
-          name: reconciler-db
-          property: connectionString
+        sync: false
       - key: APP_SAMPLE_DATA_ENABLED
         value: "true"
-      # Set this in the Render dashboard to enable the Explain buttons. The app works without it.
+      # Set this to enable the Explain buttons. The app works without it.
       - key: OPENAI_API_KEY
         sync: false

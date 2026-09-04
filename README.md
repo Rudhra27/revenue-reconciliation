@@ -371,9 +371,10 @@ on boot; the health check is at `/actuator/health`.
 Neon, Railway and Fly all work with no manual URL formatting. For local runs, set
 `SPRING_DATASOURCE_*` instead (see `.env.example`).
 
-**Render.** `render.yaml` is a blueprint that provisions a free Postgres and a Docker web
-service. Deploy with *New → Blueprint*, then set `OPENAI_API_KEY` in the dashboard if you
-want the Explain buttons.
+**Deploying.** Create a PostgreSQL database (a free [Neon](https://neon.tech) project works
+and doesn't expire), then deploy the Docker image anywhere and set `DATABASE_URL` to the
+Neon connection string. `render.yaml` is a Render blueprint for exactly this — *New →
+Blueprint*, then set `DATABASE_URL` and (optionally) `OPENAI_API_KEY` in the dashboard.
 
 Live URL and test credentials are in the submission notes.
 
