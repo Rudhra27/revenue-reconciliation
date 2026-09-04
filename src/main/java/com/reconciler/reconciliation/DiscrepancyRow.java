@@ -72,6 +72,10 @@ public class DiscrepancyRow {
 	@Column(name = "amount_impact", nullable = false)
 	private BigDecimal amountImpact;
 
+	// order id + any transaction refs, lower-cased, for the drill-down search box
+	@Column(name = "search_text")
+	private String searchText;
+
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(columnDefinition = "jsonb", nullable = false)
 	@Builder.Default

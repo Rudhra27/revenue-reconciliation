@@ -13,6 +13,20 @@ public interface OrderRowRepository extends JpaRepository<OrderRow, UUID> {
 
 	List<OrderRow> findByDatasetIdOrderBySourceLineNo(UUID datasetId);
 
+	@Query(value = """
+			select f as flag, count(*) as count
+			from order_row o cross join lateral unnest(o.data_quality_flags) as f
+			where o.dataset_id = :datasetId
+			group by f order by count(*) desc
+			""", nativeQuery = true)
+	List<FlagCount> flagCounts(@Param("datasetId") UUID datasetId);
+
+	interface FlagCount {
+		String getFlag();
+
+		long getCount();
+	}
+
 	// clears the persistence context too, so a re-upload in the same transaction
 	// doesn't leave the just-deleted rows lying around as stale managed entities
 	@Modifying(flushAutomatically = true, clearAutomatically = true)

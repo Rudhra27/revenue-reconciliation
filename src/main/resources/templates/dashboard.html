@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/common :: head('Dashboard')}"></head>
+<body>
+<header th:replace="~{fragments/common :: topbar}"></header>
+<main class="content wide">
+	<p><a th:href="@{/datasets/{id}(id=${dash.dataset.id})}">Back to dataset</a></p>
+	<h1 th:text="${dash.dataset.name}">Dataset</h1>
+	<p class="muted">
+		Reconciled as of <span th:text="${dash.reconciledAt()}">date</span>,
+		engine v<span th:text="${dash.run.engineVersion}">1.0</span>.
+	</p>
+
+	<section class="cards">
+		<div class="card stat">
+			<div class="stat-label">Total orders</div>
+			<div class="stat-value" th:text="${dash.run.totalOrders}">0</div>
+		</div>
+		<div class="card stat">
+			<div class="stat-label">Total payments</div>
+			<div class="stat-value" th:text="${dash.run.totalPayments}">0</div>
+		</div>
+		<div class="card stat">
+			<div class="stat-label">Value reconciled</div>
+			<div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(dash.run.valueReconciled, 1, 'COMMA', 2, 'POINT')}">$0</div>
+		</div>
+		<div class="card stat">
+			<div class="stat-label">Value in dispute</div>
+			<div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(dash.run.valueInDispute, 1, 'COMMA', 2, 'POINT')}">$0</div>
+		</div>
+		<div class="card stat risk">
+			<div class="stat-label">Money at risk</div>
+			<div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(dash.run.moneyAtRisk, 1, 'COMMA', 2, 'POINT')}">$0</div>
+			<div class="stat-sub">
+				<span>We are owed <strong th:text="'$' + ${#numbers.formatDecimal(dash.owedToUs, 1, 'COMMA', 2, 'POINT')}">$0</strong></span>
+				<span>We may owe back <strong th:text="'$' + ${#numbers.formatDecimal(dash.owedByUs, 1, 'COMMA', 2, 'POINT')}">$0</strong></span>
+			</div>
+		</div>
+	</section>
+
+	<section class="split">
+		<div class="card">
+			<div class="card-head">
+				<h2>Discrepancies by type</h2>
+				<div class="toggle">
+					<button type="button" class="on" data-metric="count">Count</button>
+					<button type="button" data-metric="impact">Impact</button>
+				</div>
+			</div>
+			<canvas id="typeChart" height="220"></canvas>
+		</div>
+
+		<div class="card">
+			<h2>Where the money points</h2>
+			<table>
+				<tbody>
+				<tr th:each="s : ${dash.byDirection}">
+					<td th:text="${s.label}">bucket</td>
+					<td class="num" th:text="${s.count}">0</td>
+					<td class="num" th:text="'$' + ${#numbers.formatDecimal(s.impact, 1, 'COMMA', 2, 'POINT')}">$0</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<section class="card">
+		<h2>Discrepancies</h2>
+		<form id="filters" hx-get="/dashboard/discrepancies" hx-target="#drill"
+			  hx-trigger="change, keyup delay:400ms from:find input[name='q']">
+			<input type="hidden" name="datasetId" th:value="${dash.dataset.id}">
+			<select name="type">
+				<option value="">All types</option>
+				<option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.label()}">Type</option>
+			</select>
+			<select name="direction">
+				<option value="">All directions</option>
+				<option th:each="d : ${directions}" th:value="${d.name()}" th:text="${d.label()}">Direction</option>
+			</select>
+			<input type="search" name="q" placeholder="Search order id or transaction ref">
+		</form>
+		<div id="drill" hx-get="/dashboard/discrepancies" hx-target="#drill" hx-trigger="load" hx-include="#filters">
+			Loading&hellip;
+		</div>
+	</section>
+
+	<section class="card" th:if="${!dash.dataQuality.isEmpty()}">
+		<h2>Data quality</h2>
+		<p class="muted">
+			<span th:text="${dash.dataQualityRowCount()}">0</span> imported rows carry a flag. These don't affect the
+			figures above, but a user reviewing a discrepancy may want to know.
+		</p>
+		<table>
+			<tbody>
+			<tr th:each="f : ${dash.dataQuality}">
+				<td th:text="${f.flag}">FLAG</td>
+				<td class="num" th:text="${f.count}">0</td>
+			</tr>
+			</tbody>
+		</table>
+	</section>
+</main>
+
+<script th:src="@{/js/htmx.min.js}"></script>
+<script th:src="@{/js/chart.min.js}"></script>
+<script th:inline="javascript">
+	const byType = /*[[${dash.byType}]]*/ [];
+	const ctx = document.getElementById('typeChart');
+	let metric = 'count';
+
+	const chart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: byType.map(t => t.label),
+			datasets: [{ data: byType.map(t => t.count), backgroundColor: '#115ea3' }]
+		},
+		options: {
+			plugins: { legend: { display: false } },
+			scales: { y: { beginAtZero: true } }
+		}
+	});
+
+	document.querySelectorAll('.toggle button').forEach(btn => {
+		btn.addEventListener('click', () => {
+			metric = btn.dataset.metric;
+			document.querySelectorAll('.toggle button').forEach(b => b.classList.toggle('on', b === btn));
+			chart.data.datasets[0].data = byType.map(t => metric === 'count' ? t.count : Number(t.impact));
+			chart.update();
+		});
+	});
+</script>
+</body>
+</html>

@@ -7,20 +7,30 @@ package com.reconciler.reconciliation;
 public enum Direction {
 
 	/** Revenue we should have collected and did not (missing / failed charge, undercharge). */
-	OWED_TO_US,
+	OWED_TO_US("We are owed"),
 
 	/** Money we hold that we may have to give back (duplicate charge, overcharge, unfinished refund). */
-	OWED_BY_US,
+	OWED_BY_US("We may owe back"),
 
 	/** A settled payment with no order behind it. Needs a human to explain, not a reserve. */
-	INVESTIGATION,
+	INVESTIGATION("Needs investigation"),
 
 	/** The cash already left; only the books are wrong now (a refund the order system never recorded). */
-	ALREADY_LOST,
+	ALREADY_LOST("Already lost"),
 
 	/** Most likely just timing (a recent pending settlement). */
-	WATCH,
+	WATCH("Watching"),
 
 	/** Real exposure, but not measurable without extra data (a currency mismatch with no FX rate). */
-	UNQUANTIFIED
+	UNQUANTIFIED("Unquantified");
+
+	private final String label;
+
+	Direction(String label) {
+		this.label = label;
+	}
+
+	public String label() {
+		return label;
+	}
 }

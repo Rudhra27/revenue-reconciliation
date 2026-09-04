@@ -59,6 +59,160 @@ body.centered {
 	padding: 28px 24px;
 }
 
+.content.wide {
+	max-width: 1100px;
+}
+
+/* Dashboard */
+.cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.stat {
+	padding: 14px 16px;
+}
+
+.stat-label {
+	font-size: 12px;
+	color: var(--muted);
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.stat-value {
+	font-size: 22px;
+	font-weight: 700;
+	margin-top: 4px;
+}
+
+.stat.risk {
+	grid-column: span 2;
+	border-color: #e0b3ae;
+	background: #fdf3f1;
+}
+
+.stat-sub {
+	display: flex;
+	gap: 16px;
+	margin-top: 8px;
+	font-size: 12px;
+	color: var(--muted);
+}
+
+.split {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.toggle button {
+	background: #eef1f4;
+	color: var(--ink);
+	font-weight: 500;
+	padding: 4px 10px;
+	font-size: 12px;
+}
+
+.toggle button.on {
+	background: var(--accent);
+	color: #fff;
+}
+
+.num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+#filters {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-bottom: 12px;
+}
+
+#filters select,
+#filters input {
+	font: inherit;
+	padding: 6px 8px;
+	border: 1px solid var(--rule);
+	border-radius: 6px;
+}
+
+#filters input[type="search"] {
+	flex: 1;
+	min-width: 200px;
+}
+
+table.drill td {
+	vertical-align: top;
+}
+
+.pill {
+	display: inline-block;
+	padding: 1px 7px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.sev-high {
+	background: #fbe4e1;
+	color: #a3271e;
+}
+
+.sev-medium {
+	background: #fbf0d8;
+	color: #8a6d1f;
+}
+
+.sev-low {
+	background: #e6eef6;
+	color: #2a5a86;
+}
+
+dl.detail {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 2px 14px;
+	margin: 6px 0 0;
+	font-size: 12px;
+}
+
+dl.detail dt {
+	color: var(--muted);
+}
+
+dl.detail dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.pager {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+	.split {
+		grid-template-columns: 1fr;
+	}
+
+	.stat.risk {
+		grid-column: span 1;
+	}
+}
+
 h1 {
 	margin: 0 0 18px;
 	font-size: 20px;

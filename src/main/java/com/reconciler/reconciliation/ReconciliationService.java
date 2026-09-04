@@ -95,6 +95,24 @@ public class ReconciliationService {
 				.currency(d.currency())
 				.amountImpact(d.amountImpact())
 				.detail(d.detail())
+				.searchText(searchText(d))
 				.build();
+	}
+
+	// order id plus whatever refs are in the detail, so one LIKE covers the search box
+	private static String searchText(Discrepancy d) {
+		StringBuilder text = new StringBuilder();
+		if (d.orderId() != null) {
+			text.append(d.orderId()).append(' ');
+		}
+		appendIfPresent(text, d.detail().get("transactionRef"));
+		appendIfPresent(text, d.detail().get("orderReference"));
+		return text.toString().trim().toLowerCase();
+	}
+
+	private static void appendIfPresent(StringBuilder text, Object value) {
+		if (value != null) {
+			text.append(value).append(' ');
+		}
 	}
 }

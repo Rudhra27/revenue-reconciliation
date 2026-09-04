@@ -20,6 +20,7 @@
 			<th>Name</th>
 			<th>Status</th>
 			<th>Created</th>
+			<th></th>
 		</tr>
 		</thead>
 		<tbody>
@@ -27,6 +28,10 @@
 			<td><a th:href="@{/datasets/{id}(id=${d.id})}" th:text="${d.name}">name</a></td>
 			<td th:text="${d.status}">CREATED</td>
 			<td th:text="${d.created}">date</td>
+			<td>
+				<a th:if="${d.status.name() == 'RECONCILED'}"
+				   th:href="@{/dashboard(datasetId=${d.id})}">Dashboard</a>
+			</td>
 		</tr>
 		</tbody>
 	</table>

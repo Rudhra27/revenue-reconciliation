@@ -76,13 +76,10 @@
 				<dd><span th:text="${run.matchedOrders}">0</span> of <span th:text="${run.totalOrders}">0</span> orders</dd>
 				<dt>Discrepancies</dt>
 				<dd th:text="${run.discrepancyCount}">0</dd>
-				<dt>Value reconciled</dt>
-				<dd th:text="'$' + ${run.valueReconciled}">$0</dd>
-				<dt>Value in dispute</dt>
-				<dd th:text="'$' + ${run.valueInDispute}">$0</dd>
 				<dt>Money at risk</dt>
 				<dd th:text="'$' + ${run.moneyAtRisk}">$0</dd>
 			</dl>
+			<p><a th:href="@{/dashboard(datasetId=${dataset.id})}">Open dashboard</a></p>
 		</div>
 		<p class="muted" th:if="${!canReconcile}">Load both files first.</p>
 		<form th:action="@{/datasets/{id}/reconcile(id=${dataset.id})}" method="post">
