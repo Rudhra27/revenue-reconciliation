@@ -361,11 +361,21 @@ Liquibase changelog applies cleanly.
 
 ## Deployment
 
-The app is a single container. It needs a PostgreSQL database (`SPRING_DATASOURCE_*`) and,
-optionally, `OPENAI_API_KEY`. Liquibase migrates the schema on boot; the health check is at
-`/actuator/health`. The sample-data loader is on by default (`APP_SAMPLE_DATA_ENABLED`).
+The app is a single container (`Dockerfile`, multi-stage: Gradle build → slim JRE 21). It
+needs a PostgreSQL database and, optionally, `OPENAI_API_KEY`. Liquibase migrates the schema
+on boot; the health check is at `/actuator/health`.
 
-See `.env.example` for the full list of environment variables.
+**Database URL.** Most hosts hand the database over as a single
+`postgres://user:pass@host:port/db` string in `DATABASE_URL`. An
+`EnvironmentPostProcessor` converts that to a JDBC URL and credentials on start, so Render,
+Neon, Railway and Fly all work with no manual URL formatting. For local runs, set
+`SPRING_DATASOURCE_*` instead (see `.env.example`).
+
+**Render.** `render.yaml` is a blueprint that provisions a free Postgres and a Docker web
+service. Deploy with *New → Blueprint*, then set `OPENAI_API_KEY` in the dashboard if you
+want the Explain buttons.
+
+Live URL and test credentials are in the submission notes.
 
 ---
 

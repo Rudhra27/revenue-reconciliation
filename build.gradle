@@ -46,3 +46,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Only build the executable boot jar, not the plain library jar.
+tasks.named('jar') {
+	enabled = false
+}
