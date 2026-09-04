@@ -9,56 +9,63 @@
 		</span>
 	</p>
 
-	<table class="drill">
-		<thead>
-		<tr>
-			<th>Type</th>
-			<th>Severity</th>
-			<th>Order</th>
-			<th>Direction</th>
-			<th class="num">Impact</th>
-			<th>Detail</th>
-		</tr>
-		</thead>
-		<tbody>
-		<tr th:each="d : ${results.content}">
-			<td th:text="${d.type}">Type</td>
-			<td>
-				<span class="pill" th:classappend="'sev-' + ${d.severity.toLowerCase()}" th:text="${d.severity}">SEV</span>
-			</td>
-			<td th:text="${d.orderId} ?: '—'">ORD-1</td>
-			<td th:text="${d.direction}">direction</td>
-			<td class="num"
-				th:text="${(d.currency != null ? d.currency + ' ' : '$')} + ${#numbers.formatDecimal(d.amountImpact, 1, 'COMMA', 2, 'POINT')}">
-				$0
-			</td>
-			<td>
-				<details>
-					<summary>view</summary>
-					<dl class="detail">
-						<th:block th:each="e : ${d.detail}">
-							<dt th:text="${e.key}">key</dt>
-							<dd th:text="${e.value}">value</dd>
-						</th:block>
-					</dl>
-					<div class="explain">
-						<button type="button" class="linkbtn"
-								th:attr="hx-post='/discrepancies/' + ${d.id} + '/explain'"
-								hx-target="next .explanation-slot" hx-swap="innerHTML"
-								hx-indicator="next .explain-spinner">
-							Explain this
-						</button>
-						<span class="explain-spinner htmx-indicator">thinking&hellip;</span>
-						<div class="explanation-slot"></div>
-					</div>
-				</details>
-			</td>
-		</tr>
-		<tr th:if="${results.isEmpty()}">
-			<td colspan="6" class="muted">No discrepancies match those filters.</td>
-		</tr>
-		</tbody>
-	</table>
+	<div class="table-wrap">
+		<table class="drill">
+			<thead>
+			<tr>
+				<th>Type</th>
+				<th>Severity</th>
+				<th>Order</th>
+				<th>Direction</th>
+				<th class="num">Impact</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+			<th:block th:each="d : ${results.content}">
+				<tr>
+					<td class="nowrap" th:text="${d.type}">Type</td>
+					<td>
+						<span class="pill" th:classappend="'sev-' + ${d.severity.toLowerCase()}"
+							  th:text="${d.severity}">SEV</span>
+					</td>
+					<td th:text="${d.orderId} ?: '—'">ORD-1</td>
+					<td class="nowrap" th:text="${d.direction}">direction</td>
+					<td class="num nowrap"
+						th:text="${(d.currency != null ? d.currency + ' ' : '$')} + ${#numbers.formatDecimal(d.amountImpact, 1, 'COMMA', 2, 'POINT')}">
+						$0
+					</td>
+					<td>
+						<button type="button" class="linkbtn" data-detail-toggle>view</button>
+					</td>
+				</tr>
+				<tr class="detail-row" hidden>
+					<td colspan="6">
+						<dl class="detail">
+							<th:block th:each="e : ${d.detail}">
+								<dt th:text="${e.key}">key</dt>
+								<dd th:text="${e.value}">value</dd>
+							</th:block>
+						</dl>
+						<div class="explain">
+							<button type="button" class="linkbtn"
+									th:attr="hx-post='/discrepancies/' + ${d.id} + '/explain'"
+									hx-target="next .explanation-slot" hx-swap="innerHTML"
+									hx-indicator="next .explain-spinner">
+								Explain this
+							</button>
+							<span class="explain-spinner htmx-indicator">thinking&hellip;</span>
+							<div class="explanation-slot"></div>
+						</div>
+					</td>
+				</tr>
+			</th:block>
+			<tr th:if="${results.isEmpty()}">
+				<td colspan="6" class="muted">No discrepancies match those filters.</td>
+			</tr>
+			</tbody>
+		</table>
+	</div>
 
 	<div class="pager" th:if="${results.totalPages > 1}">
 		<button type="button" th:disabled="${results.first}"

@@ -126,6 +126,17 @@
 			event.detail.headers[header] = token;
 		}
 	});
+
+	// Show/hide a discrepancy's detail row (also works on drill-down content htmx swaps in).
+	document.body.addEventListener('click', (event) => {
+		const toggle = event.target.closest('[data-detail-toggle]');
+		if (!toggle) return;
+		const detailRow = toggle.closest('tr').nextElementSibling;
+		if (detailRow && detailRow.classList.contains('detail-row')) {
+			detailRow.hidden = !detailRow.hidden;
+			toggle.textContent = detailRow.hidden ? 'view' : 'hide';
+		}
+	});
 </script>
 <script th:inline="javascript">
 	const byType = /*[[${dash.byType}]]*/ [];

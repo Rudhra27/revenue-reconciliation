@@ -31,6 +31,12 @@ body.centered {
 	background: #fff;
 	border: 1px solid var(--rule);
 	border-radius: 10px;
+	padding: 20px 24px;
+	margin: 0 0 16px;
+}
+
+/* Auth pages: a single narrow, centred card */
+body.centered .card {
 	padding: 28px 32px;
 	margin: 64px 16px;
 	width: 100%;
@@ -68,7 +74,12 @@ body.centered {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 	gap: 12px;
-	margin-bottom: 20px;
+	margin-bottom: 16px;
+}
+
+.cards .card,
+.split .card {
+	margin-bottom: 0;
 }
 
 .stat {
@@ -153,8 +164,28 @@ body.centered {
 	min-width: 200px;
 }
 
+.table-wrap {
+	overflow-x: auto;
+	max-width: 100%;
+}
+
+table.drill {
+	min-width: 620px;
+}
+
 table.drill td {
 	vertical-align: top;
+}
+
+td.nowrap,
+th.nowrap {
+	white-space: nowrap;
+}
+
+.detail-row > td {
+	background: #fafbfc;
+	padding-top: 10px;
+	padding-bottom: 14px;
 }
 
 .pill {
@@ -182,10 +213,11 @@ table.drill td {
 
 dl.detail {
 	display: grid;
-	grid-template-columns: max-content 1fr;
+	grid-template-columns: max-content minmax(0, 1fr);
 	gap: 2px 14px;
-	margin: 6px 0 0;
+	margin: 0 0 8px;
 	font-size: 12px;
+	max-width: 520px;
 }
 
 dl.detail dt {
