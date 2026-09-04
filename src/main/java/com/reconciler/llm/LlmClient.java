@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -14,13 +15,17 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
-/** The one place that talks to OpenAI. Chat Completions with a strict JSON-schema response. */
+/**
+ * The one place that talks to the model. Chat Completions over the OpenAI wire format, which
+ * OpenAI-compatible hosts (Groq, OpenRouter, Together, Ollama) also speak.
+ */
 @Component
 class LlmClient {
 
-	// Asking for structured output means a well-formed reply is the norm; LlmService still
-	// handles the case where it isn't (truncation, refusal, an outage mid-stream).
-	private static final Map<String, Object> RESPONSE_FORMAT = Map.of(
+	// Strict schema — OpenAI honours it, so a well-formed reply is guaranteed. Other hosts
+	// mostly don't, which is why the default is the widely-supported json_object mode and the
+	// prompt spells out the shape. Either way LlmService validates and falls back gracefully.
+	private static final Map<String, Object> JSON_SCHEMA_FORMAT = Map.of(
 			"type", "json_schema",
 			"json_schema", Map.of(
 					"name", "discrepancy_explanation",
@@ -79,12 +84,22 @@ class LlmClient {
 		Map<String, Object> body = new LinkedHashMap<>();
 		body.put("model", properties.model());
 		body.put("temperature", properties.temperature());
-		body.put("max_completion_tokens", properties.maxTokens());
-		body.put("response_format", RESPONSE_FORMAT);
+		body.put("max_tokens", properties.maxTokens());
+		responseFormat().ifPresent(format -> body.put("response_format", format));
 		body.put("messages", messages.stream()
 				.map(m -> Map.of("role", m.role(), "content", m.content()))
 				.toList());
 		return body;
+	}
+
+	private Optional<Object> responseFormat() {
+		String configured = properties.responseFormat() == null ? "json_object"
+				: properties.responseFormat().trim().toLowerCase();
+		return switch (configured) {
+			case "json_schema" -> Optional.of(JSON_SCHEMA_FORMAT);
+			case "none", "" -> Optional.empty();
+			default -> Optional.of(Map.of("type", "json_object"));
+		};
 	}
 
 	// Retry once on a timeout or a 5xx; surface 4xx and anything else straight away.
@@ -110,10 +125,10 @@ class LlmClient {
 					Thread.currentThread().interrupt();
 					throw new LlmCallException("The model call was interrupted.");
 				} catch (RestClientException retryFailure) {
-					throw new LlmCallException("OpenAI is returning errors right now.");
+					throw new LlmCallException("The model provider is returning errors right now.");
 				}
 			}
-			throw new LlmCallException("OpenAI rejected the request (" + http.getStatusCode() + ").");
+			throw new LlmCallException("The model provider rejected the request (" + http.getStatusCode() + ").");
 		} catch (RestClientException other) {
 			throw new LlmCallException("The model call failed: " + other.getMessage());
 		}

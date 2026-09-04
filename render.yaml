@@ -15,6 +15,8 @@ services:
         sync: false
       - key: APP_SAMPLE_DATA_ENABLED
         value: "true"
-      # Set this to enable the Explain buttons. The app works without it.
-      - key: OPENAI_API_KEY
+      # Enables the Explain buttons. Any OpenAI-compatible endpoint works — set
+      # LLM_BASE_URL and LLM_MODEL too if it isn't OpenAI (e.g. Groq's free Llama).
+      # The app works without a key.
+      - key: LLM_API_KEY
         sync: false

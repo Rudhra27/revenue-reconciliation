@@ -22,7 +22,11 @@ class PromptBuilder {
 			You explain reconciliation discrepancies to a revenue analyst. You are given a \
 			deterministic classification and the numbers behind it. Do not recompute or dispute \
 			the match decision. Explain plainly what likely happened and what someone should do \
-			about it. If the data is insufficient to be sure, say so.""";
+			about it. If the data is insufficient to be sure, say so.
+
+			Reply with a single JSON object and nothing else, with exactly these string fields: \
+			"summary", "likely_cause", "recommended_action", and "confidence" (one of "low", \
+			"medium", "high").""";
 
 	private final ObjectMapper json;
 

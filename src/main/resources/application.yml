@@ -28,12 +28,13 @@ app:
     enabled: ${APP_SAMPLE_DATA_ENABLED:true}
   llm:
     enabled: ${APP_LLM_ENABLED:true}
-    api-key: ${OPENAI_API_KEY:}
-    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
-    model: ${OPENAI_MODEL:gpt-4o-mini}
+    api-key: ${LLM_API_KEY:}
+    base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+    model: ${LLM_MODEL:gpt-4o-mini}
     temperature: ${LLM_TEMPERATURE:0.2}
     max-tokens: ${LLM_MAX_TOKENS:500}
     timeout-seconds: ${LLM_TIMEOUT_SECONDS:20}
+    response-format: ${LLM_RESPONSE_FORMAT:json_object}
 
 server:
   port: ${PORT:8080}

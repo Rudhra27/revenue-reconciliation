@@ -75,6 +75,17 @@ class LlmServiceTest {
 	}
 
 	@Test
+	void acceptsJsonWrappedInAMarkdownFence() {
+		Ctx c = reconciled();
+		when(client.complete(anyList())).thenReturn("```json\n" + VALID_JSON + "\n```");
+
+		LlmExplanation explanation = llm.explainDiscrepancy(c.discrepancyId, c.userId);
+
+		assertThat(explanation.getStatus()).isEqualTo(ExplanationStatus.OK);
+		assertThat(explanation.getSummary()).isNotBlank();
+	}
+
+	@Test
 	void aReplyThatIsNotJsonBecomesInvalid() {
 		Ctx c = reconciled();
 		when(client.complete(anyList())).thenReturn("Sorry, I can't help with that.");

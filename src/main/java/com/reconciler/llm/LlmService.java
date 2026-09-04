@@ -121,7 +121,7 @@ public class LlmService {
 	private ExplanationResult parse(String raw) {
 		ExplanationResult result;
 		try {
-			result = json.readValue(raw, ExplanationResult.class);
+			result = json.readValue(unfence(raw), ExplanationResult.class);
 		} catch (JacksonException e) {
 			throw new LlmParseException(raw, "The model's reply was not valid JSON.");
 		}
@@ -129,6 +129,15 @@ public class LlmService {
 			throw new LlmParseException(raw, "The model's reply was missing one of the required fields.");
 		}
 		return result;
+	}
+
+	// Some models wrap JSON in a ```json ... ``` fence even when asked not to.
+	private static String unfence(String raw) {
+		String trimmed = raw.strip();
+		if (trimmed.startsWith("```")) {
+			trimmed = trimmed.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "");
+		}
+		return trimmed;
 	}
 
 	private String hash(String canonicalJson) {

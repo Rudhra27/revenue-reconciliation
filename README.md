@@ -34,9 +34,10 @@ Health check: <http://localhost:8080/actuator/health>
 
 ### LLM explanations (optional)
 
-Set `OPENAI_API_KEY` to enable the **Explain** buttons. Without a key the app works exactly
-the same — the buttons just report that the explanation service isn't configured. All other
-config is in `.env.example`.
+Set `LLM_API_KEY` to enable the **Explain** buttons. Any OpenAI-compatible endpoint works —
+OpenAI, or a free Llama host like Groq (`LLM_BASE_URL=https://api.groq.com/openai/v1`,
+`LLM_MODEL=llama-3.3-70b-versatile`). Without a key the app works exactly the same — the
+buttons just report that the explanation service isn't configured. See `.env.example`.
 
 ### Tests
 
@@ -44,7 +45,7 @@ config is in `.env.example`.
 ./gradlew test
 ```
 
-91 tests. The integration tests spin up PostgreSQL via Testcontainers, so Docker must be
+98 tests. The integration tests spin up PostgreSQL via Testcontainers, so Docker must be
 running.
 
 ---
@@ -53,7 +54,7 @@ running.
 
 A single Spring Boot application — one deployable JAR. It serves server-rendered HTML,
 exposes a few HTML-fragment endpoints driven by htmx, runs the reconciliation engine
-in-process, and talks to PostgreSQL and (optionally) OpenAI. Nothing else is deployed.
+in-process, and talks to PostgreSQL and (optionally) an LLM API. Nothing else is deployed.
 
 ```
 Browser
@@ -64,7 +65,7 @@ Spring Security filter chain
 Controllers ─► Services ─► JPA repositories ─► PostgreSQL
      │              │
      │ Thymeleaf    ├─► ReconciliationEngine   (pure, in-process, no I/O)
-     │ + htmx       └─► LlmService ─► OpenAI    (backend only; key from an env var)
+     │ + htmx       └─► LlmService ─► LLM API   (backend only; key from an env var)
      ▼
 HTML pages + HTML fragments
 ```
@@ -78,7 +79,7 @@ HTML pages + HTML fragments
 | Migrations | Liquibase | Schema is rebuilt from the changelog on every boot. |
 | Auth | Spring Security, form login, **server-side session**, BCrypt | Simplest correct option for a server-rendered app: no token lifecycle to get wrong, CSRF stays on. |
 | Frontend | Thymeleaf + htmx + Chart.js | Keeps it a genuine monolith with one build. htmx gives async fragment swaps — exactly what the "LLM call in flight / failed" states need. htmx and Chart.js are vendored under `static/js/`, so the page has no external dependencies. |
-| LLM | OpenAI `gpt-4o-mini`, called from the backend only | See [LLM approach](#llm-approach). |
+| LLM | OpenAI or any compatible endpoint (Groq free Llama, …), backend only | See [LLM approach](#llm-approach). |
 
 ### How data is scoped to a user
 
@@ -136,7 +137,7 @@ com.reconciler
   ingest/          CSV parsing and normalisation, the upload flow, the sample-data loader
   reconciliation/  the pure engine, plus persistence of a run and its discrepancies
   dashboard/       the dashboard page and the drill-down query
-  llm/             OpenAI client, prompt building, the explanation service and endpoints
+  llm/             the model client, prompt building, the explanation service and endpoints
   web/             the "/" redirect
 ```
 
@@ -316,24 +317,29 @@ The LLM adds a layer of explanation on top of the deterministic results. It is c
 from `LlmService`, on the backend. It never influences whether two records match, and the
 dashboard is fully usable whether or not any explanation call succeeds.
 
+**Provider.** The client speaks the OpenAI Chat Completions wire format, so it works with
+OpenAI or any compatible host — a free Llama on Groq / OpenRouter / Together, or a local
+Ollama. `LLM_BASE_URL`, `LLM_MODEL` and `LLM_RESPONSE_FORMAT` are configuration.
+
 **What it's given.** A small hand-built JSON object: the discrepancy type, the computed
 numbers (`settledCharges`, `settledRefunds`, `effectivePaid`, the difference), amounts and
 currency. Only derived facts — no customer details.
 
-**Model and parameters.** `gpt-4o-mini`. **Temperature 0.2** — low enough that the same
+**Model and parameters.** `gpt-4o-mini` by default (or e.g. `llama-3.3-70b-versatile` on Groq). **Temperature 0.2** — low enough that the same
 discrepancy yields a stable explanation on a repeat (results are cached, and a reviewer may
 re-open the same row), but not 0, because the output is prose rather than arithmetic and a
 little variation reads more naturally. `max_completion_tokens` is capped; the client has a
 10-second connect / 20-second read timeout and retries once on a timeout or a 5xx.
 
-**Structured output.** The request uses a strict `json_schema` response format for
-`{ summary, likely_cause, recommended_action, confidence }`, so a well-formed reply is the
-norm.
+**Structured output.** For `{ summary, likely_cause, recommended_action, confidence }`.
+`LLM_RESPONSE_FORMAT` selects how: `json_schema` (strict, OpenAI only), `json_object`
+(forces valid JSON, the portable default), or `none`. The system prompt spells out the exact
+field shape regardless, so it holds up on models that don't support a schema.
 
-**Bad responses.** The reply is still parsed and validated. A non-JSON reply or one missing
-a field is stored as `INVALID` with the raw text kept; a failed call is stored as `FAILED`.
-Either way the UI shows the problem and offers a **Try again** button — it never breaks the
-page.
+**Bad responses.** The reply is unfenced (some models wrap JSON in ```` ```json ````), then
+parsed and validated. A non-JSON reply or one missing a field is stored as `INVALID` with
+the raw text kept; a failed call is stored as `FAILED`. Either way the UI shows the problem
+and offers a **Try again** button — it never breaks the page.
 
 **Caching.** Each explanation is keyed by `SHA-256(prompt version | model | temperature |
 context JSON)`. A repeat request for an unchanged discrepancy returns the stored result with
@@ -346,7 +352,7 @@ no API call.
 
 ## Testing
 
-91 tests. Highlights:
+98 tests. Highlights:
 
 - `ReconciliationEngineTest` — one scenario per rule, plus a determinism check.
 - `ReconciliationOnSampleDataTest` — the engine over the two bundled files, every figure pinned.
@@ -362,7 +368,7 @@ Liquibase changelog applies cleanly.
 ## Deployment
 
 The app is a single container (`Dockerfile`, multi-stage: Gradle build → slim JRE 21). It
-needs a PostgreSQL database and, optionally, `OPENAI_API_KEY`. Liquibase migrates the schema
+needs a PostgreSQL database and, optionally, `LLM_API_KEY`. Liquibase migrates the schema
 on boot; the health check is at `/actuator/health`.
 
 **Database URL.** Most hosts hand the database over as a single
@@ -374,7 +380,7 @@ Neon, Railway and Fly all work with no manual URL formatting. For local runs, se
 **Deploying.** Create a PostgreSQL database (a free [Neon](https://neon.tech) project works
 and doesn't expire), then deploy the Docker image anywhere and set `DATABASE_URL` to the
 Neon connection string. `render.yaml` is a Render blueprint for exactly this — *New →
-Blueprint*, then set `DATABASE_URL` and (optionally) `OPENAI_API_KEY` in the dashboard.
+Blueprint*, then set `DATABASE_URL` and (optionally) `LLM_API_KEY` in the dashboard.
 
 Live URL and test credentials are in the submission notes.
 
