@@ -1,6 +1,7 @@
 package com.reconciler.dataset;
 
 import com.reconciler.ingest.SampleDataProperties;
+import com.reconciler.reconciliation.ReconciliationService;
 import com.reconciler.user.AppUserPrincipal;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -23,13 +24,15 @@ public class DatasetController {
 	private final OrderRowRepository orderRows;
 	private final PaymentRowRepository paymentRows;
 	private final SampleDataProperties sampleData;
+	private final ReconciliationService reconciliation;
 
 	public DatasetController(DatasetService datasets, OrderRowRepository orderRows, PaymentRowRepository paymentRows,
-			SampleDataProperties sampleData) {
+			SampleDataProperties sampleData, ReconciliationService reconciliation) {
 		this.datasets = datasets;
 		this.orderRows = orderRows;
 		this.paymentRows = paymentRows;
 		this.sampleData = sampleData;
+		this.reconciliation = reconciliation;
 	}
 
 	@GetMapping
@@ -54,11 +57,14 @@ public class DatasetController {
 	public String detail(@AuthenticationPrincipal AppUserPrincipal user, @PathVariable UUID id, Model model) {
 		Dataset dataset = datasets.getOwned(id, user.id());
 		long orderCount = orderRows.countByDatasetId(id);
+		long paymentCount = paymentRows.countByDatasetId(id);
 		model.addAttribute("dataset", DatasetView.of(dataset));
 		model.addAttribute("orderCount", orderCount);
-		model.addAttribute("paymentCount", paymentRows.countByDatasetId(id));
+		model.addAttribute("paymentCount", paymentCount);
 		model.addAttribute("ordersLoaded", orderCount > 0);
+		model.addAttribute("canReconcile", orderCount > 0 && paymentCount > 0);
 		model.addAttribute("sampleDataEnabled", sampleData.enabled());
+		model.addAttribute("run", reconciliation.latestRun(id, user.id()).orElse(null));
 		return "datasets/detail";
 	}
 

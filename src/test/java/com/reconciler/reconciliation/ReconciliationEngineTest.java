@@ -164,15 +164,25 @@ class ReconciliationEngineTest {
 	}
 
 	@Test
-	void aPendingChargeThatHasSatForWeeksBecomesOwedToUs() {
+	void aPendingChargeThatHasSatForMonthsStaysAWatchItemButEscalates() {
 		Discrepancy d = only(engine.run(
 				List.of(order("ORD-1", "completed", "67.00")),
 				List.of(pendingCharge("ORD-1", "67.00", Instant.parse("2025-01-01T00:00:00Z"))),
 				AS_OF));
 
 		assertThat(d.type()).isEqualTo(DiscrepancyType.PENDING_SETTLEMENT);
-		assertThat(d.direction()).isEqualTo(Direction.OWED_TO_US);
-		assertThat(d.severity()).isEqualTo(Severity.MEDIUM);
+		assertThat(d.direction()).isEqualTo(Direction.WATCH);
+		assertThat(d.severity()).isEqualTo(Severity.HIGH);
+	}
+
+	@Test
+	void aPendingChargeNeverCountsAsMoneyAtRisk() {
+		ReconciliationResult result = engine.run(
+				List.of(order("ORD-1", "completed", "67.00")),
+				List.of(pendingCharge("ORD-1", "67.00", Instant.parse("2024-01-01T00:00:00Z"))),
+				AS_OF);
+
+		assertThat(result.summary().moneyAtRisk()).isEqualByComparingTo("0.00");
 	}
 
 	@Test

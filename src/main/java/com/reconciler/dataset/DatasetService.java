@@ -40,4 +40,9 @@ public class DatasetService {
 	public void markPaymentsLoaded(UUID id, UUID userId) {
 		getOwned(id, userId).markPaymentsLoaded();
 	}
+
+	@Transactional
+	public void markReconciled(UUID id, UUID userId) {
+		getOwned(id, userId).markReconciled();
+	}
 }

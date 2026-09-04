@@ -61,6 +61,10 @@ public class Dataset {
 		status = DatasetStatus.PAYMENTS_LOADED;
 	}
 
+	public void markReconciled() {
+		status = DatasetStatus.RECONCILED;
+	}
+
 	public UUID getId() {
 		return id;
 	}

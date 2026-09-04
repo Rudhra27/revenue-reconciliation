@@ -15,6 +15,7 @@
 	</dl>
 
 	<div th:if="${uploadError}" class="box box-error" th:text="${uploadError}">error</div>
+	<div th:if="${reconcileMessage}" class="box box-ok" th:text="${reconcileMessage}">reconciled</div>
 
 	<div th:each="s : ${uploadSummaries}" class="box"
 		 th:classappend="${s.clean()} ? 'box-ok' : 'box-warn'">
@@ -67,7 +68,28 @@
 		</form>
 	</section>
 
-	<p class="muted">Reconciliation arrives in the next commit.</p>
+	<section class="upload">
+		<h2>Reconciliation</h2>
+		<div th:if="${run != null}">
+			<dl class="facts">
+				<dt>Matched</dt>
+				<dd><span th:text="${run.matchedOrders}">0</span> of <span th:text="${run.totalOrders}">0</span> orders</dd>
+				<dt>Discrepancies</dt>
+				<dd th:text="${run.discrepancyCount}">0</dd>
+				<dt>Value reconciled</dt>
+				<dd th:text="'$' + ${run.valueReconciled}">$0</dd>
+				<dt>Value in dispute</dt>
+				<dd th:text="'$' + ${run.valueInDispute}">$0</dd>
+				<dt>Money at risk</dt>
+				<dd th:text="'$' + ${run.moneyAtRisk}">$0</dd>
+			</dl>
+		</div>
+		<p class="muted" th:if="${!canReconcile}">Load both files first.</p>
+		<form th:action="@{/datasets/{id}/reconcile(id=${dataset.id})}" method="post">
+			<button type="submit" th:disabled="${!canReconcile}"
+					th:text="${run != null} ? 'Re-run reconciliation' : 'Reconcile'">Reconcile</button>
+		</form>
+	</section>
 </main>
 </body>
 </html>

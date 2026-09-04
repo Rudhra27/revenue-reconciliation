@@ -13,7 +13,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Component;
 
 @Component
-class OrderCsvParser extends CsvRowParser<OrderRow> {
+public class OrderCsvParser extends CsvRowParser<OrderRow> {
 
 	private static final List<String> HEADER = List.of(
 			"order_id", "order_date", "customer_email", "currency", "gross_amount", "discount", "net_amount", "status");

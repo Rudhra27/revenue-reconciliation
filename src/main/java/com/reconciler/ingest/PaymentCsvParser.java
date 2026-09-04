@@ -13,7 +13,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Component;
 
 @Component
-class PaymentCsvParser extends CsvRowParser<PaymentRow> {
+public class PaymentCsvParser extends CsvRowParser<PaymentRow> {
 
 	private static final List<String> HEADER = List.of(
 			"transaction_ref", "processed_at", "order_reference", "currency", "amount", "fee", "net_settled", "type",

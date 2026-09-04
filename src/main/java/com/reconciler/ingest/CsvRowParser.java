@@ -20,7 +20,7 @@ import org.apache.commons.csv.CSVRecord;
  * then hands each record to the subclass. A record the subclass rejects becomes a
  * RowError; every other kind of problem fails the whole file.
  */
-abstract class CsvRowParser<T> {
+public abstract class CsvRowParser<T> {
 
 	private static final int BOM = 0xFEFF;
 
@@ -28,7 +28,7 @@ abstract class CsvRowParser<T> {
 
 	abstract T toRow(CSVRecord record, UUID datasetId, UUID userId);
 
-	ParseResult<T> parse(InputStream csv, UUID datasetId, UUID userId) {
+	public ParseResult<T> parse(InputStream csv, UUID datasetId, UUID userId) {
 		List<T> rows = new ArrayList<>();
 		List<RowError> errors = new ArrayList<>();
 		int dataRows = 0;

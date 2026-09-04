@@ -24,9 +24,11 @@ import java.util.UUID;
  */
 public class ReconciliationEngine {
 
+	/** Bumped whenever the rules change, so a stored run says which logic produced it. */
+	public static final String VERSION = "1.0";
+
 	private static final BigDecimal TOLERANCE_FLOOR = new BigDecimal("0.05");
 	private static final BigDecimal TOLERANCE_RATE = new BigDecimal("0.005"); // 0.5%
-	private static final Duration PENDING_WATCH_WINDOW = Duration.ofDays(7);
 
 	private static final String CHARGE = "charge";
 	private static final String REFUND = "refund";
@@ -166,12 +168,14 @@ public class ReconciliationEngine {
 		if (settledCharges.isEmpty()) {
 			Optional<PaymentRow> pending = charges.stream().filter(p -> PENDING.equals(p.getStatus())).findFirst();
 			if (pending.isPresent()) {
-				boolean watch = isRecent(pending.get(), order, asOf);
+				// A pending charge might still settle, so it's a "watch" item rather than an
+				// exposure — it never counts toward money at risk. Age only bumps the urgency.
+				long daysPending = daysPending(pending.get(), order, asOf);
 				Map<String, Object> detail = detail(order, effectivePaid, chargeSum, refundSum);
-				detail.put("pendingSince", String.valueOf(reference(pending.get(), order)));
-				return Optional.of(discrepancy(DiscrepancyType.PENDING_SETTLEMENT, null,
-						watch ? Direction.WATCH : Direction.OWED_TO_US,
-						order, charges, refunds, order.getCurrency(), money(net), detail));
+				detail.put("daysPending", daysPending);
+				return Optional.of(discrepancy(DiscrepancyType.PENDING_SETTLEMENT, null, Direction.WATCH,
+						order, charges, refunds, order.getCurrency(), money(net), detail)
+						.withSeverity(pendingSeverity(daysPending)));
 			}
 			// Charges exist but none settled and none pending — the money never arrived.
 			return Optional.of(discrepancy(DiscrepancyType.FAILED_PAYMENT, null, Direction.OWED_TO_US,
@@ -212,19 +216,16 @@ public class ReconciliationEngine {
 		detail.put("type", payment.getType());
 		detail.put("status", payment.getStatus());
 		return new Discrepancy(DiscrepancyType.ORDER_NOT_FOUND, null, Severity.HIGH, Direction.INVESTIGATION,
-				null, null, List.of(payment.getId()), payment.getCurrency(), money(payment.getAmount()), detail);
+				null, null, idList(payment), payment.getCurrency(), money(payment.getAmount()), detail);
 	}
 
 	private Discrepancy discrepancy(DiscrepancyType type, String subtype, Direction direction, OrderRow order,
 			List<PaymentRow> charges, List<PaymentRow> refunds, String currency, BigDecimal impact,
 			Map<String, Object> detail) {
 		List<UUID> paymentIds = new ArrayList<>();
-		charges.forEach(p -> paymentIds.add(p.getId()));
-		refunds.forEach(p -> paymentIds.add(p.getId()));
-		Severity severity = (type == DiscrepancyType.PENDING_SETTLEMENT && direction == Direction.WATCH)
-				? Severity.LOW
-				: type.baseSeverity();
-		return new Discrepancy(type, subtype, severity, direction, order.getOrderId(), order.getId(),
+		charges.forEach(p -> addId(paymentIds, p));
+		refunds.forEach(p -> addId(paymentIds, p));
+		return new Discrepancy(type, subtype, type.baseSeverity(), direction, order.getOrderId(), order.getId(),
 				List.copyOf(paymentIds), currency, impact, detail);
 	}
 
@@ -240,6 +241,19 @@ public class ReconciliationEngine {
 		return detail;
 	}
 
+	// Rows straight from a parser have no id yet; only include the persisted ones.
+	private static void addId(List<UUID> ids, PaymentRow payment) {
+		if (payment.getId() != null) {
+			ids.add(payment.getId());
+		}
+	}
+
+	private static List<UUID> idList(PaymentRow payment) {
+		List<UUID> ids = new ArrayList<>();
+		addId(ids, payment);
+		return List.copyOf(ids);
+	}
+
 	private static BigDecimal tolerance(BigDecimal net) {
 		return net.abs().multiply(TOLERANCE_RATE).max(TOLERANCE_FLOOR);
 	}
@@ -248,13 +262,17 @@ public class ReconciliationEngine {
 		return rows.stream().map(PaymentRow::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
 
-	private static boolean isRecent(PaymentRow pending, OrderRow order, Instant asOf) {
-		Instant since = reference(pending, order);
-		return since != null && Duration.between(since, asOf).compareTo(PENDING_WATCH_WINDOW) < 0;
+	private static long daysPending(PaymentRow pending, OrderRow order, Instant asOf) {
+		Instant since = pending.getProcessedAt() != null ? pending.getProcessedAt() : order.getOrderDate();
+		return since == null ? Long.MAX_VALUE : Duration.between(since, asOf).toDays();
 	}
 
-	private static Instant reference(PaymentRow payment, OrderRow order) {
-		return payment.getProcessedAt() != null ? payment.getProcessedAt() : order.getOrderDate();
+	// Recent -> probably fine; a few weeks -> chase it; longer -> it's not going to settle.
+	private static Severity pendingSeverity(long daysPending) {
+		if (daysPending < 7) {
+			return Severity.LOW;
+		}
+		return daysPending < 30 ? Severity.MEDIUM : Severity.HIGH;
 	}
 
 	private static BigDecimal money(BigDecimal value) {

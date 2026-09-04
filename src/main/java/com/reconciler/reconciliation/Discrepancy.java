@@ -24,4 +24,9 @@ public record Discrepancy(
 		String currency,
 		BigDecimal amountImpact,
 		Map<String, Object> detail) {
+
+	public Discrepancy withSeverity(Severity newSeverity) {
+		return new Discrepancy(type, subtype, newSeverity, direction, orderId, orderRowId, paymentRowIds, currency,
+				amountImpact, detail);
+	}
 }
