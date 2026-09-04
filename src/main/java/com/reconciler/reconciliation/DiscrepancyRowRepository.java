@@ -2,6 +2,7 @@ package com.reconciler.reconciliation;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,6 +14,10 @@ public interface DiscrepancyRowRepository
 		extends JpaRepository<DiscrepancyRow, UUID>, JpaSpecificationExecutor<DiscrepancyRow> {
 
 	List<DiscrepancyRow> findByDatasetId(UUID datasetId);
+
+	Optional<DiscrepancyRow> findByIdAndUserId(UUID id, UUID userId);
+
+	List<DiscrepancyRow> findTop20ByDatasetIdOrderByAmountImpactDesc(UUID datasetId);
 
 	@Query("""
 			select d.direction as direction, count(d) as count, coalesce(sum(d.amountImpact), 0) as impact
