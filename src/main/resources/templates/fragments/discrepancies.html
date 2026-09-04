@@ -41,6 +41,16 @@
 							<dd th:text="${e.value}">value</dd>
 						</th:block>
 					</dl>
+					<div class="explain">
+						<button type="button" class="linkbtn"
+								th:attr="hx-post='/discrepancies/' + ${d.id} + '/explain'"
+								hx-target="next .explanation-slot" hx-swap="innerHTML"
+								hx-indicator="next .explain-spinner">
+							Explain this
+						</button>
+						<span class="explain-spinner htmx-indicator">thinking&hellip;</span>
+						<div class="explanation-slot"></div>
+					</div>
 				</details>
 			</td>
 		</tr>

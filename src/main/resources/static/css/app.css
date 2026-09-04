@@ -203,6 +203,36 @@ dl.detail dd {
 	margin-top: 10px;
 }
 
+/* htmx loading indicators */
+.htmx-indicator {
+	display: none;
+	color: var(--muted);
+	font-size: 12px;
+	margin-left: 6px;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+	display: inline;
+}
+
+.explain {
+	margin-top: 8px;
+}
+
+.explanation-panel {
+	margin-top: 8px;
+	font-size: 13px;
+}
+
+.explanation-panel p {
+	margin: 4px 0;
+}
+
+#dashboard-explanation .explanation-panel {
+	font-size: 14px;
+}
+
 @media (max-width: 720px) {
 	.split {
 		grid-template-columns: 1fr;
