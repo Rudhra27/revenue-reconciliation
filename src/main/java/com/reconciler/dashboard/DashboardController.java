@@ -44,7 +44,7 @@ public class DashboardController {
 			@RequestParam(required = false) String q, @RequestParam(defaultValue = "0") int page, Model model) {
 		datasets.getOwned(datasetId, user.id()); // ownership gate
 
-		Page<DiscrepancyRow> results = drilldown.search(datasetId,
+		Page<DiscrepancyRow> results = drilldown.search(datasetId, user.id(),
 				parse(DiscrepancyType.class, type), parse(Direction.class, direction), q, page);
 
 		model.addAttribute("results", results.map(DiscrepancyView::of));

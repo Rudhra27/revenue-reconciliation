@@ -29,11 +29,12 @@ public class DiscrepancyQueryService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<DiscrepancyRow> search(UUID datasetId, DiscrepancyType type, Direction direction, String query,
-			int page) {
+	public Page<DiscrepancyRow> search(UUID datasetId, UUID userId, DiscrepancyType type, Direction direction,
+			String query, int page) {
 		Specification<DiscrepancyRow> spec = (root, q, cb) -> {
 			List<Predicate> where = new ArrayList<>();
 			where.add(cb.equal(root.get("datasetId"), datasetId));
+			where.add(cb.equal(root.get("userId"), userId)); // defence in depth alongside the controller's ownership gate
 			if (type != null) {
 				where.add(cb.equal(root.get("type"), type));
 			}
