@@ -5,27 +5,33 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.springframework.boot.EnvironmentPostProcessor;
-import org.springframework.boot.SpringApplication;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
 
 /**
  * Most hosts (Render, Neon, Railway, Fly) hand the database over as a single
- * {@code postgres://user:pass@host:port/db} URL. Spring's datasource wants a JDBC URL and
- * separate credentials, so translate it here before anything else reads the environment.
- * Does nothing when DATABASE_URL is absent or already a jdbc: URL.
+ * {@code postgres://user:pass@host:port/db} URL in DATABASE_URL. Spring's datasource wants a
+ * JDBC URL and separate credentials. This is applied from {@code main()} as system properties
+ * (rather than an EnvironmentPostProcessor) so it can't miss, whatever the packaging does.
  */
-public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public final class DatabaseUrl {
 
-	@Override
-	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-		String databaseUrl = environment.getProperty("DATABASE_URL");
-		if (databaseUrl == null || !(databaseUrl.startsWith("postgres://") || databaseUrl.startsWith("postgresql://"))) {
-			return;
+	private DatabaseUrl() {
+	}
+
+	/** Read DATABASE_URL from the environment and, if it's a postgres URL, set the spring.datasource.* system properties. */
+	public static void applyToSystemProperties() {
+		toJdbcProperties(System.getenv("DATABASE_URL")).forEach(System::setProperty);
+	}
+
+	static Map<String, String> toJdbcProperties(String databaseUrl) {
+		if (databaseUrl == null) {
+			return Map.of();
+		}
+		String trimmed = databaseUrl.trim();
+		if (!(trimmed.startsWith("postgres://") || trimmed.startsWith("postgresql://"))) {
+			return Map.of();
 		}
 
-		URI uri = URI.create(databaseUrl);
+		URI uri = URI.create(trimmed);
 		int port = uri.getPort() == -1 ? 5432 : uri.getPort();
 		StringBuilder jdbcUrl = new StringBuilder("jdbc:postgresql://")
 				.append(uri.getHost()).append(':').append(port).append(uri.getPath());
@@ -33,7 +39,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 			jdbcUrl.append('?').append(uri.getQuery());
 		}
 
-		Map<String, Object> properties = new LinkedHashMap<>();
+		Map<String, String> properties = new LinkedHashMap<>();
 		properties.put("spring.datasource.url", jdbcUrl.toString());
 		String userInfo = uri.getUserInfo();
 		if (userInfo != null) {
@@ -44,8 +50,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 				properties.put("spring.datasource.password", decode(userInfo.substring(separator + 1)));
 			}
 		}
-
-		environment.getPropertySources().addFirst(new MapPropertySource("databaseUrl", properties));
+		return properties;
 	}
 
 	private static String decode(String value) {
